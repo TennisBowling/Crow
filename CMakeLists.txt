@@ -55,7 +55,13 @@ target_include_directories(Crow
 		$<INSTALL_INTERFACE:include>
 )
 
-find_package(asio REQUIRED)
+include(FetchContent)
+FetchContent_Declare(
+	asiocmake
+	GIT_REPOSITORY "https://github.com/OlivierLDff/asio.cmake"
+	GIT_TAG "main"
+)
+FetchContent_MakeAvailable(asiocmake)
 
 target_link_libraries(Crow
 	INTERFACE
