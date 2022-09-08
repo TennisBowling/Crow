@@ -1,6 +1,6 @@
-#####################################
+# ####################################
 # Define Project-Wide Settings
-#####################################
+# ####################################
 cmake_minimum_required(VERSION 3.15.0 FATAL_ERROR)
 
 # Define the project name and language
@@ -13,8 +13,9 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # Check if Crow is the main project
 set(CROW_IS_MAIN_PROJECT OFF)
-if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-  set(CROW_IS_MAIN_PROJECT ON)
+
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+	set(CROW_IS_MAIN_PROJECT ON)
 endif()
 
 # Set required C++ standard
@@ -23,7 +24,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 # Default to build type "Release" unless tests are being built
 if(NOT CMAKE_BUILD_TYPE)
-	if (NOT CROW_BUILD_TESTS)
+	if(NOT CROW_BUILD_TESTS)
 		message(STATUS "No build type selected, default to Release")
 		set(CMAKE_BUILD_TYPE "Release")
 	else()
@@ -32,40 +33,40 @@ if(NOT CMAKE_BUILD_TYPE)
 	endif()
 endif()
 
-#####################################
+# ####################################
 # Define Options
-#####################################
-option(CROW_BUILD_EXAMPLES     "Build the examples in the project"      ${CROW_IS_MAIN_PROJECT})
-option(CROW_BUILD_TESTS        "Build the tests in the project"         ${CROW_IS_MAIN_PROJECT})
-option(CROW_AMALGAMATE         "Combine all headers into one"           OFF)
-option(CROW_INSTALL            "Add install step for Crow"              ON )
+# ####################################
+option(CROW_BUILD_EXAMPLES "Build the examples in the project" ${CROW_IS_MAIN_PROJECT})
+option(CROW_BUILD_TESTS "Build the tests in the project" ${CROW_IS_MAIN_PROJECT})
+option(CROW_AMALGAMATE "Combine all headers into one" OFF)
+option(CROW_INSTALL "Add install step for Crow" OFF)
 
 # Possible values: ssl, compression
-option(CROW_FEATURES					 "Enable features extending Crow's abilities" "")
+option(CROW_FEATURES "Enable features extending Crow's abilities" "")
 
-#####################################
+# ####################################
 # Define Targets
-#####################################
+# ####################################
 add_library(Crow INTERFACE)
 add_library(Crow::Crow ALIAS Crow)
 
 target_include_directories(Crow
 	INTERFACE
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-		$<INSTALL_INTERFACE:include>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+	$<INSTALL_INTERFACE:include>
 )
 
-include(FetchContent)
-FetchContent_Declare(
-	asiocmake
+include(cmake/CPM.cmake)
+
+CPMAddPackage(
+	NAME asiocmake
 	GIT_REPOSITORY "https://github.com/OlivierLDff/asio.cmake"
 	GIT_TAG "main"
 )
-FetchContent_MakeAvailable(asiocmake)
 
 target_link_libraries(Crow
 	INTERFACE
-		asio::asio
+	asio::asio
 )
 
 if("compression" IN_LIST CROW_FEATURES)
@@ -102,6 +103,7 @@ if(NOT MSVC AND CROW_BUILD_TESTS)
 	if(NOT "compression" IN_LIST CROW_FEATURES)
 		message(STATUS "Compression tests are omitted. (Configure with CROW_FEATURES containing 'compression' to enable them)")
 	endif()
+
 	if(NOT "ssl" IN_LIST CROW_FEATURES)
 		message(STATUS "SSL tests are omitted. (Configure with CROW_FEATURES containing 'ssl' to enable them)")
 	else()
@@ -114,9 +116,9 @@ if(NOT MSVC AND CROW_BUILD_TESTS)
 	add_test(NAME template_test COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/template/test.py WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests/template)
 endif()
 
-#####################################
+# ####################################
 # Install Files
-#####################################
+# ####################################
 if(CROW_INSTALL)
 	install(TARGETS Crow EXPORT CrowTargets)
 	install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)
@@ -135,9 +137,9 @@ if(CROW_INSTALL)
 	)
 	install(FILES
 		"${CMAKE_CURRENT_SOURCE_DIR}/cmake/Findasio.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/CrowConfig.cmake"
-    DESTINATION lib/cmake/Crow
-  )
+		"${CMAKE_CURRENT_BINARY_DIR}/CrowConfig.cmake"
+		DESTINATION lib/cmake/Crow
+	)
 endif()
 
 set(CPACK_GENERATOR "DEB")
@@ -151,15 +153,15 @@ set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
 include(CPack)
 
-#####################################
+# ####################################
 # Uninstall Files
-#####################################
+# ####################################
 if(NOT TARGET uninstall)
-  configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-    IMMEDIATE @ONLY)
+	configure_file(
+		"${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
+		"${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+		IMMEDIATE @ONLY)
 
-  add_custom_target(uninstall
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+	add_custom_target(uninstall
+		COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 endif()
